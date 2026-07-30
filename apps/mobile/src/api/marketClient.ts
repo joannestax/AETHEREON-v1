@@ -29,12 +29,13 @@ export async function fetchObservatoryLive(): Promise<ObservatoryData> {
       marketSummary:
         liveCount > 0
           ? `Live feeds online for ${liveCount} assets. Aetheron reads structure from verified marks only — unlisted ORIGO tickers stay unmarked until a public feed exists.`
-          : DEMO_OBSERVATORY.marketSummary,
+          : 'Backend online. Aetheron reads structure from verified marks only — no priced assets in this watchlist yet; unlisted ORIGO tickers stay unmarked until a public feed exists.',
       summaryGeneratedAt: new Date().toISOString(),
       watchlist: data.watchlist,
       marketStrip: data.marketStrip,
       quoteOfTheDay: DEMO_OBSERVATORY.quoteOfTheDay,
-      live: liveCount > 0,
+      // API responded successfully — distinct from whether individual marks arrived
+      live: true,
     };
   } catch {
     return { ...DEMO_OBSERVATORY, live: false };
