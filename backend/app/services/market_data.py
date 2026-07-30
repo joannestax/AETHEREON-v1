@@ -12,7 +12,8 @@ from typing import Any
 import httpx
 
 _CACHE: dict[str, tuple[float, Any]] = {}
-_CACHE_TTL = 45.0  # seconds
+_CACHE_TTL = 90.0  # seconds — respect free-tier rate limits
+_STALE_TTL = 900.0  # serve stale on upstream 429 rather than inventing
 
 COINGECKO_IDS = {
     "BTC": "bitcoin",
@@ -26,9 +27,14 @@ YAHOO_SYMBOLS = {"NVDA", "AAPL", "MSFT", "TSLA", "AMZN", "META", "GOOGL"}
 UNLISTED = {"ORGN", "AETH"}
 
 
-def _cached(key: str):
+def _cached(key: str, *, allow_stale: bool = False):
     hit = _CACHE.get(key)
-    if hit and (time.time() - hit[0]) < _CACHE_TTL:
+    if not hit:
+        return None
+    age = time.time() - hit[0]
+    if age < _CACHE_TTL:
+        return hit[1]
+    if allow_stale and age < _STALE_TTL:
         return hit[1]
     return None
 
@@ -43,6 +49,32 @@ def _client() -> httpx.Client:
         timeout=12.0,
         headers={"User-Agent": "AetheronGenesis/0.1 (ORIGO Nexus; market-read-only)"},
     )
+
+
+def fetch_fear_greed() -> dict | None:
+    """Crypto Fear & Greed from alternative.me — live sentiment, never invented."""
+    key = "fng:latest"
+    cached = _cached(key)
+    if cached is not None:
+        return cached
+
+    try:
+        with _client() as client:
+            r = client.get("https://api.alternative.me/fng/", params={"limit": 1})
+            r.raise_for_status()
+            payload = r.json()
+        row = (payload.get("data") or [None])[0]
+        if not row:
+            return _cached(key, allow_stale=True)
+        out = {
+            "value": int(row["value"]),
+            "classification": row.get("value_classification"),
+            "source": "alternative.me",
+            "isLive": True,
+        }
+        return _store(key, out)
+    except Exception:  # noqa: BLE001
+        return _cached(key, allow_stale=True)
 
 
 def fetch_crypto_quotes(tickers: list[str]) -> dict[str, dict]:
@@ -63,6 +95,11 @@ def fetch_crypto_quotes(tickers: list[str]) -> dict[str, dict]:
                 "include_24hr_change": "true",
             },
         )
+        if r.status_code == 429:
+            stale = _cached(key, allow_stale=True)
+            if stale is not None:
+                return stale
+            r.raise_for_status()
         r.raise_for_status()
         raw = r.json()
 
@@ -93,6 +130,11 @@ def fetch_crypto_sparkline(ticker: str, days: int = 7) -> list[float]:
             f"https://api.coingecko.com/api/v3/coins/{cg_id}/market_chart",
             params={"vs_currency": "usd", "days": days},
         )
+        if r.status_code == 429:
+            stale = _cached(key, allow_stale=True)
+            if stale is not None:
+                return stale
+            return []
         r.raise_for_status()
         prices = r.json().get("prices", [])
 
@@ -149,28 +191,45 @@ def fetch_global_overview() -> dict:
     key = "cg:global"
     cached = _cached(key)
     if cached is not None:
-        return cached
+        overview = dict(cached)
+    else:
+        overview = None
+        try:
+            with _client() as client:
+                r = client.get("https://api.coingecko.com/api/v3/global")
+                if r.status_code == 429:
+                    stale = _cached(key, allow_stale=True)
+                    overview = dict(stale) if stale else None
+                else:
+                    r.raise_for_status()
+                    data = r.json().get("data") or {}
+                    total = (data.get("total_market_cap") or {}).get("usd")
+                    volume = (data.get("total_volume") or {}).get("usd")
+                    btc_dom = (data.get("market_cap_percentage") or {}).get("btc")
+                    mcap_change = data.get("market_cap_change_percentage_24h_usd")
+                    overview = _store(
+                        key,
+                        {
+                            "totalMarketCap": total,
+                            "totalMarketCapChangePercent": mcap_change,
+                            "volume24h": volume,
+                            "btcDominance": btc_dom,
+                            "source": "coingecko",
+                            "isLive": True,
+                            "asOf": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                        },
+                    )
+        except Exception as exc:  # noqa: BLE001
+            stale = _cached(key, allow_stale=True)
+            overview = dict(stale) if stale else {"isLive": False, "error": type(exc).__name__}
 
-    with _client() as client:
-        r = client.get("https://api.coingecko.com/api/v3/global")
-        r.raise_for_status()
-        data = r.json().get("data") or {}
+    if overview is None:
+        overview = {"isLive": False}
 
-    total = (data.get("total_market_cap") or {}).get("usd")
-    volume = (data.get("total_volume") or {}).get("usd")
-    btc_dom = (data.get("market_cap_percentage") or {}).get("btc")
-    mcap_change = data.get("market_cap_change_percentage_24h_usd")
-
-    out = {
-        "totalMarketCap": total,
-        "totalMarketCapChangePercent": mcap_change,
-        "volume24h": volume,
-        "btcDominance": btc_dom,
-        "source": "coingecko",
-        "isLive": True,
-        "asOf": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-    }
-    return _store(key, out)
+    fng = fetch_fear_greed()
+    if fng:
+        overview["fearGreed"] = fng
+    return overview
 
 
 def build_watchlist(tickers: list[str] | None = None) -> dict:
@@ -231,8 +290,7 @@ def build_watchlist(tickers: list[str] | None = None) -> dict:
             )
             continue
 
-        if t in YAHOO_SYMBOLS or True:
-            # Attempt Yahoo for any other equity-like ticker
+        if t in YAHOO_SYMBOLS:
             try:
                 eq = fetch_equity_quote(t)
             except Exception as exc:  # noqa: BLE001
@@ -278,6 +336,22 @@ def build_watchlist(tickers: list[str] | None = None) -> dict:
                         "source": "yahoo",
                     }
                 )
+            continue
+
+        # Unknown ticker — never invent a mark or hit upstream blindly
+        items.append(
+            {
+                "ticker": t,
+                "name": names.get(t, t),
+                "price": None,
+                "changePercent": None,
+                "sparkline": [],
+                "isLive": False,
+                "isIllustrative": False,
+                "status": "unlisted",
+                "note": "Not on configured market feeds — no invented price.",
+            }
+        )
 
     overview = None
     try:
@@ -294,19 +368,22 @@ def build_watchlist(tickers: list[str] | None = None) -> dict:
 
 
 def _strip_from_overview(overview: dict | None) -> list[dict]:
+    fng = (overview or {}).get("fearGreed") if overview else None
+    fng_cell = {
+        "label": "FEAR & GREED",
+        "value": f"{fng['value']}" if fng and fng.get("value") is not None else "—",
+        "change": fng.get("classification") if fng else None,
+        "tone": "gold" if fng else "neutral",
+        "isLive": bool(fng and fng.get("isLive")),
+        "note": None if fng else "Feed pending",
+    }
+
     if not overview or not overview.get("isLive"):
         return [
             {"label": "TOTAL MARKET CAP", "value": "—", "change": None, "tone": "gold", "isLive": False},
             {"label": "24H VOLUME", "value": "—", "change": None, "tone": "cyan", "isLive": False},
             {"label": "BTC DOMINANCE", "value": "—", "change": None, "tone": "cyan", "isLive": False},
-            {
-                "label": "FEAR & GREED",
-                "value": "—",
-                "change": None,
-                "tone": "neutral",
-                "isLive": False,
-                "note": "Requires dedicated sentiment feed",
-            },
+            fng_cell,
         ]
 
     def money(n: float | None) -> str:
@@ -341,12 +418,6 @@ def _strip_from_overview(overview: dict | None) -> list[dict]:
             "tone": "cyan",
             "isLive": True,
         },
-        {
-            "label": "FEAR & GREED",
-            "value": "—",
-            "change": None,
-            "tone": "neutral",
-            "isLive": False,
-            "note": "Wire alternative.me or paid feed — never invent",
-        },
+        fng_cell,
     ]
+

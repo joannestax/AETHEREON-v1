@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -10,6 +10,7 @@ import {
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AETHERON } from '../constants/aetheron';
 import { DEMO_SIGNATURE_ANALYSIS } from '../data/demoSignatureAnalysis';
+import { fetchQuote } from '../api/marketClient';
 import { colors, spacing, typography } from '../theme/tokens';
 import type { SignatureAnalysis } from '../types/signatureAnalysis';
 import { AetheronOrb } from '../components/avatar/AetheronOrb';
@@ -21,6 +22,7 @@ import { SwingTradeSection } from '../components/analysis/SwingTradeSection';
 import { TechnicalSection } from '../components/analysis/TechnicalSection';
 import { CosmicBackground } from '../components/ui/CosmicBackground';
 import { SignalBadge } from '../components/ui/SignalBadge';
+import { StatusChip } from '../components/ui/CosmicButton';
 import type { RootStackParamList } from '../navigation/types';
 
 type NavProps = NativeStackScreenProps<RootStackParamList, 'SignatureAnalysis'>;
@@ -30,20 +32,66 @@ type Props = Partial<NavProps> & {
 };
 
 export function SignatureAnalysisScreen({ analysis: analysisProp, route, navigation }: Props) {
+  const tickerParam = route?.params?.ticker?.toUpperCase();
+  const [liveQuote, setLiveQuote] = useState<{
+    price: number | null;
+    changePercent: number | null;
+    name?: string;
+    isLive?: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!tickerParam) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetchQuote(tickerParam);
+        if (!cancelled && res.quote) {
+          setLiveQuote({
+            price: res.quote.price,
+            changePercent: res.quote.changePercent,
+            name: res.quote.name,
+            isLive: res.quote.isLive,
+          });
+        }
+      } catch {
+        if (!cancelled) setLiveQuote(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [tickerParam]);
+
   const analysis = useMemo(() => {
     const base = analysisProp ?? DEMO_SIGNATURE_ANALYSIS;
-    const ticker = route?.params?.ticker;
-    if (!ticker) return base;
+    if (!tickerParam) return base;
+
+    const hasLivePrice = liveQuote?.price != null;
     return {
       ...base,
-      ticker: ticker.toUpperCase(),
-      companyName: `${ticker.toUpperCase()} — resolve via live data`,
-      isIllustrative: true,
+      ticker: tickerParam,
+      companyName: liveQuote?.name ?? `${tickerParam} — resolve via live data`,
+      // Keep structural sections illustrative until full tool-built thesis exists;
+      // header price uses live mark when available.
+      price: hasLivePrice ? (liveQuote!.price as number) : base.price,
+      change: hasLivePrice
+        ? ((liveQuote!.changePercent ?? 0) / 100) * (liveQuote!.price as number)
+        : base.change,
+      changePercent: hasLivePrice
+        ? (liveQuote!.changePercent ?? 0)
+        : base.changePercent,
+      isIllustrative: !hasLivePrice,
+      liquidity: {
+        ...base.liquidity,
+        current: hasLivePrice ? (liveQuote!.price as number) : base.liquidity.current,
+      },
     };
-  }, [analysisProp, route?.params?.ticker]);
+  }, [analysisProp, tickerParam, liveQuote]);
 
   const { width } = useWindowDimensions();
   const changePositive = analysis.change >= 0;
+  const headerLive = Boolean(liveQuote?.isLive && liveQuote.price != null);
 
   return (
     <CosmicBackground>
@@ -70,12 +118,25 @@ export function SignatureAnalysisScreen({ analysis: analysisProp, route, navigat
           <AetheronOrb size={Math.min(148, width * 0.38)} form="titan" />
           <Text style={styles.aetheronName}>{AETHERON.name.toUpperCase()}</Text>
           <Text style={styles.tagline}>{AETHERON.tagline}</Text>
+          <StatusChip
+            label={headerLive ? 'LIVE MARK' : 'SAMPLE STRUCTURE'}
+            tone={headerLive ? 'green' : 'gold'}
+          />
         </View>
 
         {analysis.isIllustrative && (
           <View style={styles.demoBanner}>
             <Text style={styles.demoText}>
-              ILLUSTRATIVE SAMPLE — Not live market data. Aetheron never invents prices.
+              ILLUSTRATIVE STRUCTURE — Levels/targets are sample format until tools
+              fill them. Header mark stays blank or live — never invented.
+            </Text>
+          </View>
+        )}
+        {headerLive && (
+          <View style={styles.liveBanner}>
+            <Text style={styles.liveText}>
+              Live price from market feed. Thesis sections still require Grok tool
+              loop + verified inputs before conviction levels are published.
             </Text>
           </View>
         )}
@@ -85,18 +146,21 @@ export function SignatureAnalysisScreen({ analysis: analysisProp, route, navigat
           <Text style={styles.company}>{analysis.companyName.toUpperCase()}</Text>
           <View style={styles.priceRow}>
             <Text style={styles.price}>
-              ${analysis.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+              {headerLive || !analysis.isIllustrative
+                ? `$${analysis.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+                : '—'}
             </Text>
-            <Text
-              style={[
-                styles.change,
-                { color: changePositive ? colors.signal.bullish : colors.signal.bearish },
-              ]}
-            >
-              {changePositive ? '+' : ''}
-              {analysis.change.toFixed(2)} ({changePositive ? '+' : ''}
-              {analysis.changePercent.toFixed(2)}%)
-            </Text>
+            {(headerLive || !analysis.isIllustrative) && (
+              <Text
+                style={[
+                  styles.change,
+                  { color: changePositive ? colors.signal.bullish : colors.signal.bearish },
+                ]}
+              >
+                {changePositive ? '+' : ''}
+                {analysis.changePercent.toFixed(2)}%
+              </Text>
+            )}
           </View>
           <View style={styles.signalRow}>
             <SignalBadge signal={analysis.signal} size="lg" />
@@ -186,6 +250,21 @@ const styles = StyleSheet.create({
   demoText: {
     ...typography.uiMedium,
     color: '#FCA5A5',
+    fontSize: 11,
+    textAlign: 'center',
+    lineHeight: 16,
+  },
+  liveBanner: {
+    marginBottom: spacing.lg,
+    padding: spacing.md,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.cyan.border,
+    backgroundColor: colors.cyan.ghost,
+  },
+  liveText: {
+    ...typography.uiMedium,
+    color: colors.cyan.soft,
     fontSize: 11,
     textAlign: 'center',
     lineHeight: 16,
