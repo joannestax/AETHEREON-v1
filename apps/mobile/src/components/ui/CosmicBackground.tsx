@@ -3,6 +3,7 @@ import { Animated, StyleSheet, View, type ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle, Line } from 'react-native-svg';
 import { colors } from '../../theme/tokens';
+import { NATIVE_DRIVER } from '../../utils/animation';
 
 const STARS = [
   [12, 8], [28, 22], [45, 12], [62, 30], [78, 8], [88, 40],
@@ -31,8 +32,8 @@ export function CosmicBackground({ children, style }: Props) {
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulse, { toValue: 0.7, duration: 3200, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 0.35, duration: 3200, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0.7, duration: 3200, useNativeDriver: NATIVE_DRIVER }),
+        Animated.timing(pulse, { toValue: 0.35, duration: 3200, useNativeDriver: NATIVE_DRIVER }),
       ]),
     );
     loop.start();

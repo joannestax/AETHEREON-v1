@@ -3,7 +3,6 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   StyleSheet,
   Text,
   View,
@@ -15,6 +14,7 @@ import { AvatarFormSwitcher } from '../components/chat/AvatarFormSwitcher';
 import { ChatBubble } from '../components/chat/ChatBubble';
 import { ChatInputBar } from '../components/chat/ChatInputBar';
 import { CosmicBackground } from '../components/ui/CosmicBackground';
+import { CosmicButton, StatusChip } from '../components/ui/CosmicButton';
 import { AETHERON } from '../constants/aetheron';
 import { INITIAL_CHAT_MESSAGES, localMentorReply } from '../data/chatSeed';
 import { streamChatReply } from '../api/chatClient';
@@ -109,13 +109,21 @@ export function ChatScreen() {
         <View style={styles.hero}>
           <AetheronOrb size={112} form={form} />
           <Text style={styles.name}>{AETHERON.name}</Text>
-          <Text style={styles.tagline}>{AETHERON.tagline}</Text>
+          <View style={styles.liveRow}>
+            <Text style={styles.tagline}>{AETHERON.tagline}</Text>
+            <StatusChip label="WATCHING" tone="green" />
+          </View>
           <AvatarFormSwitcher value={form} onChange={setForm} />
         </View>
 
-        <Pressable style={styles.sigCta} onPress={() => requestSignature('NVDA')}>
-          <Text style={styles.sigCtaText}>REQUEST SIGNATURE ANALYSIS</Text>
-        </Pressable>
+        <View style={styles.sigRow}>
+          <CosmicButton
+            label="REQUEST SIGNATURE ANALYSIS"
+            variant="gold"
+            compact
+            onPress={() => requestSignature('NVDA')}
+          />
+        </View>
 
         <FlatList
           ref={listRef}
@@ -170,23 +178,16 @@ const styles = StyleSheet.create({
     ...typography.ui,
     color: colors.cyan.soft,
     fontSize: 12,
+  },
+  liveRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
     marginBottom: spacing.sm,
   },
-  sigCta: {
-    alignSelf: 'center',
+  sigRow: {
+    alignItems: 'center',
     marginBottom: spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: colors.gold.muted,
-    backgroundColor: colors.gold.ghost,
-  },
-  sigCtaText: {
-    ...typography.uiBold,
-    color: colors.gold.bright,
-    fontSize: 10,
-    letterSpacing: 1.6,
   },
   list: {
     paddingHorizontal: spacing.lg,

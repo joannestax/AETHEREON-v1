@@ -11,6 +11,9 @@ import Svg, {
   Stop,
 } from 'react-native-svg';
 import { colors } from '../../theme/tokens';
+import { NATIVE_DRIVER } from '../../utils/animation';
+
+export type AvatarForm = 'sphere' | 'titan' | 'realm_guide';
 
 export type AvatarForm = 'sphere' | 'titan' | 'realm_guide';
 
@@ -29,13 +32,13 @@ export function AetheronOrb({ size = 140, form = 'sphere' }: Props) {
         toValue: 1,
         duration: 14000,
         easing: Easing.linear,
-        useNativeDriver: true,
+        useNativeDriver: NATIVE_DRIVER,
       }),
     );
     const pulse = Animated.loop(
       Animated.sequence([
-        Animated.timing(glow, { toValue: 1, duration: 2200, useNativeDriver: true }),
-        Animated.timing(glow, { toValue: 0.45, duration: 2200, useNativeDriver: true }),
+        Animated.timing(glow, { toValue: 1, duration: 2200, useNativeDriver: NATIVE_DRIVER }),
+        Animated.timing(glow, { toValue: 0.45, duration: 2200, useNativeDriver: NATIVE_DRIVER }),
       ]),
     );
     rotate.start();
