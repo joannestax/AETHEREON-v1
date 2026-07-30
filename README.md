@@ -23,12 +23,15 @@ docs/            Architecture notes
 
 ## Priority Build Order
 
-1. ✅ Signature Analysis screen (full 6-part format)
-2. Chat screen with Titan / Realm Guide avatars
-3. Observatory (Home)
-4. Wire frontend ↔ backend
-5. Real Grok tool-calling loop
-6. Live market data connection
+1. ✅ Project scaffolding + design tokens + theme
+2. ✅ Signature Analysis screen
+3. ✅ Chat screen with Sphere / Titan / Realm Guide + streaming UI
+4. ✅ Observatory / Home + bottom navigation
+5. ✅ Backend + secure quant sandbox
+6. ✅ Daily quotes system + Command Center
+7. ✅ Wire frontend ↔ backend (API client + chat stream fallback)
+8. ⏳ Real LLM tool-calling loop (Grok scaffold ready)
+9. ✅ ORIGO embedding architecture docs
 
 ## Mobile
 
@@ -38,7 +41,8 @@ npm install
 npx expo start
 ```
 
-The app currently boots into the **Signature Analysis** screen with an **illustrative** fixture (bannered as not live data).
+Tabs: Observatory · Chat · Watchlists · Insights · Profile  
+Stack: Signature Analysis · Quotes Command Center
 
 ## Backend
 
@@ -53,10 +57,9 @@ Endpoints:
 
 - `GET /health`
 - `POST /v1/chat`
-- `POST /v1/quant/black-scholes` · `implied-vol` · `binomial` · `monte-carlo`
-- `GET /v1/quotes` · `GET /v1/quotes/today`
-
-Set `XAI_API_KEY` for Grok (scaffold only until tool loop lands).
+- `POST /v1/chat/quant`
+- `POST /v1/quant/black-scholes` · `implied-vol` · `binomial` · `monte-carlo` · `sandbox` · `portfolio/summary`
+- `GET/POST /v1/quotes` · `PATCH/DELETE /v1/quotes/{id}` · `GET /v1/quotes/today`
 
 ## Signature Analysis Contract
 
