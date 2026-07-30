@@ -1,20 +1,28 @@
-# ORIGO Integration Architecture
+# ORIGO Embedding Architecture — Aetheron Module
 
-Aetheron ships as an **embedded module** inside the ORIGO App.
+Aetheron is an **embedded intelligent co-pilot** inside the ORIGO App (Project Genesis).
 
-## Shared Context (target)
-
-- Auth session / user identity
+## Shared context
+- Authentication / session (ORIGO JWT)
 - Watchlists
 - Portfolio holdings & risk preferences
-- Notification preferences
+- User profile
 
-## Boundaries
+## Deep links
+- `origo://aetheron/chat`
+- `origo://aetheron/analyze/{TICKER}` → Signature Analysis
+- `origo://aetheron/quotes` → Daily Quotes / Command Center
+- In-app CTA on any ticker row: **Ask Aetheron**
 
-- Aetheron owns mentor UX, Signature Analysis, quotes Command Center, quant tool calls
-- ORIGO owns account, funding, brokerage connections, primary navigation shell
+## Module boundaries
+| Layer | Owns |
+|-------|------|
+| ORIGO shell | Tabs shell, auth, brokerage, funding |
+| Aetheron module | Chat, Signature Analysis, Observatory mentor widgets, Quotes, Quant tools |
 
-## Embedding
-
-- Mobile: Expo module screens under `apps/mobile/src/screens`
-- API: `backend` as `/v1/*` services; ORIGO BFF can proxy with shared JWT
+## Integration checklist
+1. Mount Aetheron screens under ORIGO navigation
+2. Pass auth token to `AETHERON_API` /v1/*
+3. Hydrate watchlist + portfolio into Observatory (never invent marks)
+4. Wire “Ask Aetheron” from Markets / Watchlists → Chat with ticker context
+5. Supabase (optional) for quotes persistence & realtime mentor events

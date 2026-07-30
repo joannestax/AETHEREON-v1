@@ -1,20 +1,15 @@
 import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import {
-  useFonts,
-  Cinzel_700Bold,
-} from '@expo-google-fonts/cinzel';
-import {
-  CormorantGaramond_600SemiBold,
-} from '@expo-google-fonts/cormorant-garamond';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useFonts, Cinzel_700Bold } from '@expo-google-fonts/cinzel';
+import { CormorantGaramond_600SemiBold } from '@expo-google-fonts/cormorant-garamond';
 import {
   DMSans_400Regular,
   DMSans_500Medium,
   DMSans_700Bold,
 } from '@expo-google-fonts/dm-sans';
-import { DEMO_SIGNATURE_ANALYSIS } from './src/data/demoSignatureAnalysis';
-import { SignatureAnalysisScreen } from './src/screens/SignatureAnalysisScreen';
+import { RootNavigator } from './src/navigation/RootNavigator';
 import { colors, typography } from './src/theme/tokens';
 
 export default function App() {
@@ -37,10 +32,10 @@ export default function App() {
   }
 
   return (
-    <>
-      <SignatureAnalysisScreen analysis={DEMO_SIGNATURE_ANALYSIS} />
+    <SafeAreaProvider>
+      <RootNavigator />
       <StatusBar style="light" />
-    </>
+    </SafeAreaProvider>
   );
 }
 
