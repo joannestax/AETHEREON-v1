@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -27,9 +27,12 @@ export function ObservatoryScreen() {
   const [data, setData] = useState<ObservatoryData>(DEMO_OBSERVATORY);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const loadSeq = useRef(0);
 
   const load = useCallback(async () => {
+    const seq = ++loadSeq.current;
     const next = await fetchObservatoryLive();
+    if (seq !== loadSeq.current) return;
     setData(next);
     setLoading(false);
   }, []);
