@@ -1,3 +1,5 @@
+import re
+
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
@@ -6,6 +8,127 @@ from app.services.signature import build_signature_stub
 from app.services.grok_client import GrokClient
 
 router = APIRouter()
+
+_TICKER_STOPWORDS = frozenset(
+    {
+        "I",
+        "A",
+        "AN",
+        "THE",
+        "AND",
+        "OR",
+        "FOR",
+        "TO",
+        "ON",
+        "IN",
+        "OF",
+        "IS",
+        "IT",
+        "MY",
+        "WE",
+        "YOU",
+        "ME",
+        "US",
+        "AM",
+        "BE",
+        "AS",
+        "AT",
+        "BY",
+        "IF",
+        "SO",
+        "DO",
+        "WANT",
+        "NEED",
+        "PLEASE",
+        "HELP",
+        "SHOW",
+        "GIVE",
+        "TELL",
+        "ABOUT",
+        "THIS",
+        "THAT",
+        "WITH",
+        "FROM",
+        "HAVE",
+        "WILL",
+        "JUST",
+        "LIKE",
+        "SOME",
+        "ANY",
+        "LEVELS",
+        "SETUP",
+        "THESIS",
+        "TRADE",
+        "STOCK",
+        "PRICE",
+        "CHART",
+        "TODAY",
+        "NOW",
+        "OPEN",
+        "LIVE",
+        "FULL",
+        "PART",
+        "WHAT",
+        "WHEN",
+        "HOW",
+        "WHY",
+        "ASK",
+        "CAN",
+        "GET",
+        "RUN",
+        "MAKE",
+        "LOOK",
+        "INTO",
+        "OVER",
+        "UNDER",
+        "HERE",
+        "THERE",
+        "YOUR",
+        "OUR",
+        "HIS",
+        "HER",
+        "ITS",
+        "NOT",
+        "BUT",
+        "ALL",
+        "ONE",
+        "TWO",
+        "OUT",
+        "UP",
+        "DOWN",
+        "LONG",
+        "SHORT",
+        "CALL",
+        "PUT",
+        "BUY",
+        "SELL",
+        "HOLD",
+        "RISK",
+        "PLAN",
+    }
+)
+
+_KNOWN_TICKERS = frozenset(
+    {
+        "NVDA",
+        "AAPL",
+        "MSFT",
+        "TSLA",
+        "AMZN",
+        "GOOGL",
+        "GOOG",
+        "META",
+        "AMD",
+        "NFLX",
+        "SPY",
+        "QQQ",
+        "BTC",
+        "ETH",
+        "INTC",
+        "UBER",
+        "COIN",
+    }
+)
 
 
 class ChatMessage(BaseModel):
@@ -28,11 +151,47 @@ class ChatResponse(BaseModel):
     )
 
 
+def _extract_ticker(user_text: str) -> str | None:
+    dollar = re.search(r"\$([A-Za-z]{1,5})\b", user_text)
+    if dollar:
+        return dollar.group(1).upper()
+
+    upper = user_text.upper()
+    known = re.search(
+        r"\b(" + "|".join(sorted(_KNOWN_TICKERS, key=len, reverse=True)) + r")\b",
+        upper,
+    )
+    if known:
+        return known.group(1)
+
+    # Prefer original all-caps tokens (2–5 letters), then any non-stopword token
+    tokens = re.findall(r"\b([A-Za-z]{2,5})\b", user_text)
+    for token in tokens:
+        if token == token.upper() and token.upper() not in _TICKER_STOPWORDS:
+            return token.upper()
+    for token in tokens:
+        candidate = token.upper()
+        if candidate not in _TICKER_STOPWORDS:
+            return candidate
+    return None
+
+
 def _mentor_reply(user_text: str, ticker: str | None) -> str:
     text = user_text.strip()
     upper = text.upper()
-    if ticker or any(k in upper for k in ("ANALY", "SIGNATURE", "THESIS", "NVDA", "AAPL", "MSFT")):
-        sym = (ticker or "the ticker").upper()
+    wants_analysis = bool(ticker) or any(
+        k in upper for k in ("ANALY", "SIGNATURE", "THESIS", "NVDA", "AAPL", "MSFT")
+    )
+    if wants_analysis:
+        sym = (ticker or _extract_ticker(text) or "").upper()
+        if not sym:
+            return (
+                "Understood. Name a ticker and I will render Signature Analysis "
+                "only with verified inputs — "
+                "Technical, Fundamental, Liquidity, Long-Term Target, Swing Setup, Signal. "
+                "Until live feeds are connected, I refuse invented prices. "
+                "Always Watching the Markets."
+            )
         return (
             f"Understood. Here is how we proceed on {sym}: "
             "I will render Signature Analysis only with verified inputs — "

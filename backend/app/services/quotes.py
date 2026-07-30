@@ -59,6 +59,7 @@ SEED: list[dict] = [
 
 _store: list[dict] = []
 _next_id = 1
+_initialized = False
 
 
 def _now() -> str:
@@ -66,15 +67,16 @@ def _now() -> str:
 
 
 def reset_store() -> None:
-    global _store, _next_id
+    global _store, _next_id, _initialized
     _store = []
     _next_id = 1
     for seed in SEED:
         add_quote(seed["text"], seed["category"])  # type: ignore[arg-type]
+    _initialized = True
 
 
 def get_daily_quotes(category: str | None = None) -> list[dict]:
-    if not _store:
+    if not _initialized:
         reset_store()
     if category:
         return [q for q in _store if q["category"] == category]
@@ -83,6 +85,14 @@ def get_daily_quotes(category: str | None = None) -> list[dict]:
 
 def get_quote_of_the_day() -> dict:
     quotes = get_daily_quotes()
+    if not quotes:
+        return {
+            "text": "",
+            "speaker": "Aetheron",
+            "category": "Wisdom",
+            "date": date.today().isoformat(),
+            "command_center": True,
+        }
     idx = date.today().toordinal() % len(quotes)
     q = quotes[idx]
     return {**q, "date": date.today().isoformat(), "command_center": True}

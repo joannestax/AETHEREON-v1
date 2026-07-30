@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import ast
 import math
+import multiprocessing as mp
 import signal
 import threading
 import traceback
@@ -170,11 +171,8 @@ def _alarm_handler(signum, frame):  # noqa: ANN001
     raise _Timeout("Quant sandbox timeout")
 
 
-def run_quant_code(code: str, timeout_sec: int = 2) -> dict[str, Any]:
-    """
-    Execute restricted Python for quant experiments.
-    Exposes black_scholes, greeks, implied_volatility, binomial_price, gbm_paths, Portfolio, math.
-    """
+def _execute_quant_code(code: str) -> dict[str, Any]:
+    """Parse, validate, and execute — caller enforces timeout."""
     try:
         tree = ast.parse(code, mode="exec")
     except SyntaxError as exc:
@@ -196,12 +194,6 @@ def run_quant_code(code: str, timeout_sec: int = 2) -> dict[str, Any]:
         "Portfolio": monte_carlo.Portfolio,
         "Position": monte_carlo.Position,
     }
-
-    # timeout via SIGALRM when available (Unix main thread only)
-    use_alarm = hasattr(signal, "SIGALRM") and threading.current_thread() is threading.main_thread()
-    if use_alarm:
-        signal.signal(signal.SIGALRM, _alarm_handler)
-        signal.setitimer(signal.ITIMER_REAL, timeout_sec)
 
     try:
         compiled = compile(tree, "<aetheron-sandbox>", "exec")
@@ -230,12 +222,62 @@ def run_quant_code(code: str, timeout_sec: int = 2) -> dict[str, Any]:
                 result[k] = v.to_dict()
         return {"ok": True, "result": result}
     except _Timeout:
-        return {"ok": False, "error": "Execution timed out"}
+        raise
     except Exception as exc:  # noqa: BLE001
         return {"ok": False, "error": f"{type(exc).__name__}: {exc}", "trace": traceback.format_exc(limit=3)}
+
+
+def _process_worker(code: str, conn: Any) -> None:
+    try:
+        conn.send(_execute_quant_code(code))
+    except Exception as exc:  # noqa: BLE001
+        conn.send({"ok": False, "error": f"{type(exc).__name__}: {exc}"})
     finally:
-        if use_alarm:
-            signal.setitimer(signal.ITIMER_REAL, 0)
+        conn.close()
+
+
+def _run_with_process_timeout(code: str, timeout_sec: int) -> dict[str, Any]:
+    """Enforce timeout via child process (safe from FastAPI worker threads)."""
+    # spawn avoids fork-from-thread issues under uvicorn's thread pool
+    ctx = mp.get_context("spawn")
+    parent_conn, child_conn = ctx.Pipe(duplex=False)
+    proc = ctx.Process(target=_process_worker, args=(code, child_conn))
+    proc.start()
+    child_conn.close()
+    proc.join(timeout_sec)
+    if proc.is_alive():
+        proc.terminate()
+        proc.join(1)
+        if proc.is_alive():
+            proc.kill()
+            proc.join(1)
+        return {"ok": False, "error": "Execution timed out"}
+    if parent_conn.poll():
+        try:
+            return parent_conn.recv()
+        except EOFError:
+            pass
+    return {"ok": False, "error": "Sandbox worker failed"}
+
+
+def run_quant_code(code: str, timeout_sec: int = 2) -> dict[str, Any]:
+    """
+    Execute restricted Python for quant experiments.
+    Exposes black_scholes, greeks, implied_volatility, binomial_price, gbm_paths, Portfolio, math.
+    """
+    # SIGALRM only works on the process main thread; FastAPI sync routes run in a thread pool
+    use_alarm = hasattr(signal, "SIGALRM") and threading.current_thread() is threading.main_thread()
+    if not use_alarm:
+        return _run_with_process_timeout(code, timeout_sec)
+
+    signal.signal(signal.SIGALRM, _alarm_handler)
+    signal.setitimer(signal.ITIMER_REAL, timeout_sec)
+    try:
+        return _execute_quant_code(code)
+    except _Timeout:
+        return {"ok": False, "error": "Execution timed out"}
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
 
 
 def _is_jsonish(value: Any) -> bool:

@@ -1,10 +1,30 @@
-import { apiPost, API_BASE } from './client';
+import { API_BASE } from './client';
+import { extractTicker } from '../data/chatSeed';
 
 type ChatApiResponse = {
   reply: string;
   signature?: Record<string, unknown> | null;
   note?: string;
 };
+
+export async function requestChat(
+  userText: string,
+  ticker?: string,
+  signal?: AbortSignal,
+) {
+  const res = await fetch(`${API_BASE}/v1/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      messages: [{ role: 'user', content: userText }],
+      ticker,
+      include_signature: Boolean(ticker),
+    }),
+    signal,
+  });
+  if (!res.ok) throw new Error(`POST /v1/chat failed: ${res.status}`);
+  return res.json() as Promise<ChatApiResponse>;
+}
 
 /**
  * Streams a reply character-by-character for cinematic mentor presence.
@@ -20,19 +40,12 @@ export async function streamChatReply(
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 2500);
-    const res = await fetch(`${API_BASE}/v1/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messages: [{ role: 'user', content: userText }],
-        include_signature: false,
-      }),
-      signal: controller.signal,
-    });
-    clearTimeout(timer);
-    if (res.ok) {
-      const data = (await res.json()) as ChatApiResponse;
+    try {
+      const ticker = extractTicker(userText);
+      const data = await requestChat(userText, ticker, controller.signal);
       if (data.reply) full = data.reply;
+    } finally {
+      clearTimeout(timer);
     }
   } catch {
     // Offline / backend not running — use local mentor voice
@@ -45,14 +58,6 @@ export async function streamChatReply(
     await sleep(8 + (i % 5));
   }
   onUpdate(acc, true);
-}
-
-export async function requestChat(userText: string, ticker?: string) {
-  return apiPost<ChatApiResponse>('/v1/chat', {
-    messages: [{ role: 'user', content: userText }],
-    ticker,
-    include_signature: Boolean(ticker),
-  });
 }
 
 function sleep(ms: number) {
