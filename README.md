@@ -21,6 +21,10 @@ Aetheron is the intelligent co-pilot / mentor layer for the ORIGO App — a magn
 
 ## Quick start
 
+**Live web preview (this agent session):** https://simpson-air-freeware-updated.trycloudflare.com
+
+**Permanent Pages (after Actions enabled):** https://joannestax.github.io/AETHEREON-v1/
+
 ### Mobile (Expo)
 
 ```bash
