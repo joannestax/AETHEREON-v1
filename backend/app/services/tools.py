@@ -294,7 +294,10 @@ def _tool_run_quant_sandbox(code: str, timeout_sec: int = 2) -> dict[str, Any]:
     timeout_sec = max(1, min(int(timeout_sec or 2), 5))
     if len(code) > 8000:
         return {"ok": False, "error": "code exceeds 8000 character limit"}
-    return run_quant_code(code, timeout_sec)
+    result = run_quant_code(code, timeout_sec)
+    if isinstance(result, dict):
+        result.pop("trace", None)
+    return result
 
 
 def _tool_signature_scaffold(ticker: str) -> dict[str, Any]:

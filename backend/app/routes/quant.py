@@ -68,6 +68,8 @@ def chat_quant(req: QuantChatRequest):
     sandbox_result = None
     if req.code:
         sandbox_result = run_quant_code(req.code)
+        if isinstance(sandbox_result, dict):
+            sandbox_result.pop("trace", None)
 
     tools_used: list = []
     source = "quant_stub"
@@ -166,7 +168,10 @@ def monte_carlo(req: MonteCarloRequest):
 
 @router.post("/quant/sandbox")
 def sandbox(req: SandboxRequest):
-    return run_quant_code(req.code, req.timeout_sec)
+    result = run_quant_code(req.code, req.timeout_sec)
+    if isinstance(result, dict):
+        result.pop("trace", None)
+    return result
 
 
 class PortfolioPosition(BaseModel):
