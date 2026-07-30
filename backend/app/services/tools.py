@@ -338,10 +338,10 @@ def execute_tool(name: str, arguments: dict[str, Any] | str | None) -> dict[str,
         if isinstance(result, dict):
             return result
         return {"result": result}
-    except TypeError as exc:
-        return {"ok": False, "error": f"invalid_arguments: {exc}"}
-    except Exception as exc:  # noqa: BLE001 — surface tool failures to the model
-        return {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
+    except TypeError:
+        return {"ok": False, "error": "invalid_arguments"}
+    except Exception:
+        return {"ok": False, "error": "tool_execution_failed"}
 
 
 def tool_result_message(tool_call_id: str, payload: dict[str, Any]) -> dict[str, Any]:

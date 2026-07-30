@@ -174,16 +174,18 @@ def run_quant_code(code: str, timeout_sec: int = 2) -> dict[str, Any]:
     """
     Execute restricted Python for quant experiments.
     Exposes black_scholes, greeks, implied_volatility, binomial_price, gbm_paths, Portfolio, math.
+    Client-facing errors are sanitized — no stack traces or exception payloads.
     """
     try:
         tree = ast.parse(code, mode="exec")
-    except SyntaxError as exc:
-        return {"ok": False, "error": f"SyntaxError: {exc}"}
+    except SyntaxError:
+        return {"ok": False, "error": "Syntax error in sandbox code"}
 
     try:
         _validate_ast(tree)
     except SandboxError as exc:
-        return {"ok": False, "error": str(exc)}
+        # Policy messages only (no exception chaining / traces)
+        return {"ok": False, "error": f"Sandbox policy: {exc.args[0] if exc.args else 'disallowed'}"}
 
     env: dict[str, Any] = {
         "__builtins__": _safe_builtins(),
@@ -231,10 +233,10 @@ def run_quant_code(code: str, timeout_sec: int = 2) -> dict[str, Any]:
         return {"ok": True, "result": result}
     except _Timeout:
         return {"ok": False, "error": "Execution timed out"}
-    except Exception as exc:  # noqa: BLE001
-        # Log locally only — never return stack traces to API clients
+    except Exception:
+        # Log server-side only — never echo exception objects to clients
         traceback.print_exc(limit=3)
-        return {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
+        return {"ok": False, "error": "Sandbox execution failed"}
     finally:
         if use_alarm:
             signal.setitimer(signal.ITIMER_REAL, 0)

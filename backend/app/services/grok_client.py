@@ -116,12 +116,11 @@ class GrokClient:
             try:
                 raw = self._post_chat(body)
             except httpx.HTTPStatusError as exc:
-                detail = exc.response.text[:500] if exc.response is not None else str(exc)
                 status = exc.response.status_code if exc.response is not None else "?"
-                last_error = f"HTTP {status}: {detail}"
+                last_error = f"HTTP {status} from Grok API"
                 break
-            except httpx.HTTPError as exc:
-                last_error = str(exc)
+            except httpx.HTTPError:
+                last_error = "Grok API transport error"
                 break
 
             choice = ((raw.get("choices") or [{}])[0]) or {}
