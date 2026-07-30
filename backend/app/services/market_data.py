@@ -231,8 +231,7 @@ def build_watchlist(tickers: list[str] | None = None) -> dict:
             )
             continue
 
-        if t in YAHOO_SYMBOLS or True:
-            # Attempt Yahoo for any other equity-like ticker
+        if t in YAHOO_SYMBOLS:
             try:
                 eq = fetch_equity_quote(t)
             except Exception as exc:  # noqa: BLE001
@@ -278,6 +277,22 @@ def build_watchlist(tickers: list[str] | None = None) -> dict:
                         "source": "yahoo",
                     }
                 )
+            continue
+
+        # Unknown ticker — never invent a mark or hit upstream blindly
+        items.append(
+            {
+                "ticker": t,
+                "name": names.get(t, t),
+                "price": None,
+                "changePercent": None,
+                "sparkline": [],
+                "isLive": False,
+                "isIllustrative": False,
+                "status": "unlisted",
+                "note": "Not on configured market feeds — no invented price.",
+            }
+        )
 
     overview = None
     try:
