@@ -1,30 +1,31 @@
 /**
  * AETHERON — Finance God visual language
- * Gold = authority · Cyan = intelligence / live data · Deep space = realm
+ * Matched to founder mockups: deep navy, metallic gold, electric cyan.
+ * Edit THIS file to change the whole app’s look.
  */
 
 export const colors = {
   space: {
-    void: '#000000',
-    deep: '#050508',
-    abyss: '#0A0A0F',
+    void: '#020617',
+    deep: '#050A18',
+    abyss: '#0A0E1A',
     navy: '#0B1220',
     nebula: '#12182A',
   },
   gold: {
-    primary: '#D4AF37',
-    bright: '#FFD700',
+    primary: '#C5A059',
+    bright: '#D4AF37',
     soft: '#E8C872',
-    muted: 'rgba(212, 175, 55, 0.55)',
-    ghost: 'rgba(212, 175, 55, 0.18)',
+    muted: 'rgba(197, 160, 89, 0.55)',
+    ghost: 'rgba(197, 160, 89, 0.16)',
   },
   cyan: {
-    primary: '#00E5FF',
-    electric: '#00FFFF',
+    primary: '#00D2FF',
+    electric: '#00E5FF',
     soft: '#7EEBFF',
-    muted: 'rgba(0, 229, 255, 0.45)',
-    ghost: 'rgba(0, 229, 255, 0.14)',
-    border: 'rgba(0, 229, 255, 0.22)',
+    muted: 'rgba(0, 210, 255, 0.45)',
+    ghost: 'rgba(0, 210, 255, 0.14)',
+    border: 'rgba(0, 210, 255, 0.28)',
   },
   signal: {
     bullish: '#22C55E',
@@ -35,17 +36,17 @@ export const colors = {
     neutralSoft: 'rgba(148, 163, 184, 0.16)',
   },
   text: {
-    primary: '#F5F7FA',
+    primary: '#FFFFFF',
     secondary: '#B8C0CC',
     tertiary: '#7A8494',
-    gold: '#D4AF37',
-    cyan: '#00E5FF',
+    gold: '#C5A059',
+    cyan: '#00D2FF',
   },
   glass: {
-    fill: 'rgba(12, 18, 32, 0.72)',
-    fillStrong: 'rgba(8, 12, 22, 0.88)',
-    stroke: 'rgba(0, 229, 255, 0.2)',
-    strokeGold: 'rgba(212, 175, 55, 0.35)',
+    fill: 'rgba(8, 14, 28, 0.72)',
+    fillStrong: 'rgba(5, 10, 22, 0.88)',
+    stroke: 'rgba(0, 210, 255, 0.28)',
+    strokeGold: 'rgba(197, 160, 89, 0.4)',
   },
   white: '#FFFFFF',
 } as const;
@@ -90,14 +91,14 @@ export const typography = {
 
 export const shadows = {
   goldGlow: {
-    shadowColor: '#D4AF37',
+    shadowColor: '#C5A059',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.45,
     shadowRadius: 12,
     elevation: 8,
   },
   cyanGlow: {
-    shadowColor: '#00E5FF',
+    shadowColor: '#00D2FF',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.4,
     shadowRadius: 10,

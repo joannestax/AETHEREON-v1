@@ -1,25 +1,63 @@
-import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AetheronOrb } from '../components/avatar/AetheronOrb';
 import { MarketDataCard } from '../components/observatory/MarketDataCard';
 import { WatchlistCard } from '../components/observatory/WatchlistCard';
 import { CosmicBackground } from '../components/ui/CosmicBackground';
+import { CosmicButton, StatusChip } from '../components/ui/CosmicButton';
 import { GlassCard } from '../components/ui/GlassCard';
+import { fetchObservatoryLive } from '../api/marketClient';
 import { DEMO_OBSERVATORY } from '../data/demoObservatory';
 import type { RootStackParamList } from '../navigation/types';
+import type { ObservatoryData } from '../types/observatory';
 import { colors, spacing, typography } from '../theme/tokens';
 
 export function ObservatoryScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const data = DEMO_OBSERVATORY;
+  const [data, setData] = useState<ObservatoryData>(DEMO_OBSERVATORY);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const load = useCallback(async () => {
+    const next = await fetchObservatoryLive();
+    setData(next);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    void load();
+    const id = setInterval(() => void load(), 60000);
+    return () => clearInterval(id);
+  }, [load]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await load();
+    setRefreshing(false);
+  };
 
   return (
     <CosmicBackground>
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.gold.primary}
+          />
+        }
       >
         <View style={styles.top}>
           <Text style={styles.compass}>✦</Text>
@@ -27,31 +65,66 @@ export function ObservatoryScreen() {
             <Text style={styles.brand}>ORIGO</Text>
             <Text style={styles.sub}>NEXUS OBSERVATORY</Text>
           </View>
-          <Text style={styles.bell}>◉</Text>
+          <Pressable onPress={() => navigation.navigate('QuotesCommandCenter')}>
+            <Text style={styles.bell}>◉</Text>
+          </Pressable>
         </View>
         <Text style={styles.tag}>Market intelligence. Beyond the horizon.</Text>
 
         <View style={styles.hero}>
-          <AetheronOrb size={132} form="sphere" />
+          <AetheronOrb size={140} form="sphere" />
           <Text style={styles.aetheron}>AETHERON</Text>
           <Text style={styles.copilot}>AI CO-PILOT</Text>
+          <View style={styles.statusRow}>
+            <StatusChip
+              label={data.live ? 'LIVE FEEDS' : 'OFFLINE SHELL'}
+              tone={data.live ? 'green' : 'gold'}
+            />
+            <StatusChip label="ORBITAL SYNC NOMINAL" tone="cyan" />
+          </View>
+        </View>
+
+        <View style={styles.actions}>
+          <CosmicButton
+            label="ASK AETHERON"
+            variant="gold"
+            compact
+            onPress={() => navigation.navigate('MainTabs', { screen: 'Chat' })}
+          />
+          <CosmicButton
+            label="SIGNATURE ANALYSIS"
+            variant="cyan"
+            compact
+            onPress={() => navigation.navigate('SignatureAnalysis', { ticker: 'NVDA' })}
+          />
         </View>
 
         {data.quoteOfTheDay ? (
-          <GlassCard accent="gold" style={styles.quoteCard}>
+          <GlassCard accent="gold" glow="gold" style={styles.quoteCard}>
             <Text style={styles.quoteLabel}>DAILY TRANSMISSION</Text>
             <Text style={styles.quote}>“{data.quoteOfTheDay}”</Text>
           </GlassCard>
         ) : null}
 
-        <GlassCard>
-          <Text style={styles.cardTitle}>AI MARKET SUMMARY</Text>
-          <Text style={styles.summary}>{data.marketSummary}</Text>
-          <Text style={styles.generated}>Generated for UI — awaiting live macro tools</Text>
+        <GlassCard glow="cyan">
+          <Text style={styles.cardTitle}>✦ AI MARKET SUMMARY</Text>
+          {loading ? (
+            <ActivityIndicator color={colors.cyan.primary} />
+          ) : (
+            <>
+              <Text style={styles.summary}>{data.marketSummary}</Text>
+              <Text style={styles.generated}>
+                {data.live
+                  ? `Live · updated ${new Date(data.summaryGeneratedAt).toLocaleTimeString()}`
+                  : 'Generated offline — connect backend for live macro'}
+              </Text>
+            </>
+          )}
         </GlassCard>
 
         <WatchlistCard
           items={data.watchlist}
+          live={data.live}
           onPressTicker={(ticker) =>
             navigation.navigate('SignatureAnalysis', { ticker })
           }
@@ -123,6 +196,19 @@ const styles = StyleSheet.create({
     color: colors.cyan.primary,
     fontSize: 10,
     letterSpacing: 2,
+  },
+  statusRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  },
+  actions: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    flexWrap: 'wrap',
   },
   quoteCard: { gap: spacing.sm },
   quoteLabel: {
