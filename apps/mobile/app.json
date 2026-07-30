@@ -6,6 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
+    "scheme": "aetheron",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.origo.aetheron"
@@ -21,7 +22,14 @@
       "package": "com.origo.aetheron"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "output": "single",
+      "name": "Aetheron \u2014 ORIGO Nexus",
+      "shortName": "Aetheron",
+      "description": "Finance God AI Mentor \u00b7 Project Genesis \u00b7 ORIGO Nexus",
+      "themeColor": "#050508",
+      "backgroundColor": "#000000"
     },
     "plugins": [
       "expo-font",
