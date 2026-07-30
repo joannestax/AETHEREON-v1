@@ -78,6 +78,7 @@ Endpoints:
 - `POST /v1/chat/quant`
 - `POST /v1/quant/black-scholes` · `implied-vol` · `binomial` · `monte-carlo` · `sandbox` · `portfolio/summary`
 - `GET/POST /v1/quotes` · `PATCH/DELETE /v1/quotes/{id}` · `GET /v1/quotes/today`
+- `GET /v1/market/watchlist` · `/overview` · `/quote/{symbol}`
 
 ## Signature Analysis Contract
 
