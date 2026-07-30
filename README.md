@@ -105,6 +105,8 @@ scripts/deploy-web.sh        manual web export helper
 | ORIGO embedding docs | ✅ | Deep links + shared auth checklist |
 | Web preview / Pages + EAS stub | ✅ | See `docs/DEPLOY.md` |
 | Grok tool-calling loop | ✅ | OpenAI-compatible loop; tools for quotes + quant; mentor fallback without key |
+| Fear & Greed | ✅ | alternative.me live index on Observatory strip |
+| Signature live header | ✅ | Live mark when feed available; thesis levels stay tool-gated |
 
 ---
 
@@ -207,10 +209,11 @@ Full checklist: [`docs/STYLE_GUIDE.md`](docs/STYLE_GUIDE.md)
 
 ## Next priorities
 
-1. Paid equity / sentiment feeds for production marks (Fear & Greed, broader equities)  
-2. Supabase persistence for quotes & mentor events  
-3. ORIGO shell mount (shared JWT, watchlists, portfolio context)  
-4. Streaming SSE from Grok tool loop into Chat UI
+1. Set `XAI_API_KEY` for full Grok mentor (tools already wired)
+2. Paid equity / broader production market feeds
+3. Supabase persistence for quotes & mentor events
+4. ORIGO shell mount (shared JWT, watchlists, portfolio context)
+5. Streaming SSE from Grok tool loop into Chat UI
 
 ---
 
