@@ -15,8 +15,6 @@ import { NATIVE_DRIVER } from '../../utils/animation';
 
 export type AvatarForm = 'sphere' | 'titan' | 'realm_guide';
 
-export type AvatarForm = 'sphere' | 'titan' | 'realm_guide';
-
 type Props = {
   size?: number;
   form?: AvatarForm;
