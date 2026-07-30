@@ -21,6 +21,20 @@ backend/         FastAPI — chat, quant sandbox, quotes
 docs/            Architecture notes
 ```
 
+## Open the app
+
+**Live web preview (this agent session):**  
+https://strengthening-prediction-latin-sleep.trycloudflare.com  
+
+**Permanent (after Pages enabled / Actions deploy):**  
+https://joannestax.github.io/AETHEREON-v1/
+
+```bash
+cd apps/mobile && npm install && npx expo start --web
+```
+
+See [docs/DEPLOY.md](docs/DEPLOY.md) for GitHub Pages, EAS / TestFlight.
+
 ## Priority Build Order
 
 1. ✅ Project scaffolding + design tokens + theme

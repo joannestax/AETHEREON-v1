@@ -73,10 +73,6 @@ const styles = StyleSheet.create({
     paddingLeft: spacing.lg,
     paddingRight: 6,
     paddingVertical: 6,
-    shadowColor: colors.cyan.primary,
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 0 },
   },
   input: {
     flex: 1,

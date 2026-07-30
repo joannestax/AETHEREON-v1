@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import { colors, radii, spacing, typography } from '../../theme/tokens';
+import { NATIVE_DRIVER } from '../../utils/animation';
 import type { ChatMessage } from '../../types/chat';
 
 type Props = {
@@ -15,8 +16,8 @@ export function ChatBubble({ message }: Props) {
     if (!message.streaming) return;
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(cursor, { toValue: 0.15, duration: 420, useNativeDriver: true }),
-        Animated.timing(cursor, { toValue: 1, duration: 420, useNativeDriver: true }),
+        Animated.timing(cursor, { toValue: 0.15, duration: 420, useNativeDriver: NATIVE_DRIVER }),
+        Animated.timing(cursor, { toValue: 1, duration: 420, useNativeDriver: NATIVE_DRIVER }),
       ]),
     );
     loop.start();
