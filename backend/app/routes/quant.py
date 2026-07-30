@@ -60,19 +60,54 @@ def chat_quant(req: QuantChatRequest):
     """
     Quant-aware chat endpoint.
     If code is provided, run it in the secure sandbox.
+    With XAI_API_KEY, routes through the Grok tool loop (quant tools only via tools).
     Never invents market data — calculations only.
     """
+    from app.services.grok_client import GrokClient
+
     sandbox_result = None
     if req.code:
         sandbox_result = run_quant_code(req.code)
 
+    tools_used: list = []
+    source = "quant_stub"
+    reply = (
+        "Quant mind online. Provide verified inputs for pricing, Greeks, IV, trees, or Monte Carlo. "
+        "I will not invent spots, vols, or marks."
+    )
+    if sandbox_result and sandbox_result.get("ok"):
+        reply = (
+            "Sandbox executed on verified code only. Review `sandbox.result` — "
+            "no live marks were invented."
+        )
+        source = "sandbox"
+
+    grok = GrokClient()
+    if grok.configured and not req.code:
+        result = grok.chat_with_tools(
+            [
+                {
+                    "role": "user",
+                    "content": (
+                        "Quant mode. Use tools for all pricing and Greeks. "
+                        f"User prompt: {req.prompt}"
+                    ),
+                }
+            ]
+        )
+        tools_used = list(result.get("tools_used") or [])
+        if result.get("reply"):
+            reply = result["reply"]
+            source = "grok"
+        elif result.get("message"):
+            reply = f"{reply} (Grok note: {result['message']})"
+
     return {
-        "reply": (
-            "Quant mind online. Provide verified inputs for pricing, Greeks, IV, trees, or Monte Carlo. "
-            "I will not invent spots, vols, or marks."
-        ),
+        "reply": reply,
         "prompt_echo": req.prompt,
         "sandbox": sandbox_result,
+        "source": source,
+        "tools_used": tools_used,
         "tools": [
             "black_scholes_price",
             "greeks",
@@ -80,6 +115,7 @@ def chat_quant(req: QuantChatRequest):
             "binomial_price",
             "gbm_paths",
             "Portfolio",
+            "get_market_quote",
         ],
     }
 

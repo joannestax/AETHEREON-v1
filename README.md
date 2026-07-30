@@ -78,7 +78,7 @@ backend/
   app/
     routes/                  chat · quant · quotes · market
     quant/                   BS, Greeks, IV, binomial, Monte Carlo, sandbox
-    services/                Grok stub, quotes, market_data, signature
+    services/                Grok tool loop, tools registry, quotes, market_data, signature
 docs/                        deploy · live data · style · ORIGO embedding
 scripts/deploy-web.sh        manual web export helper
 .github/workflows/           GitHub Pages deploy
@@ -100,7 +100,7 @@ scripts/deploy-web.sh        manual web export helper
 | Live market feeds | ✅ | CoinGecko (crypto) + Yahoo (equities); unlisted stay blank |
 | ORIGO embedding docs | ✅ | Deep links + shared auth checklist |
 | Web preview / Pages + EAS stub | ✅ | See `docs/DEPLOY.md` |
-| Grok tool-calling loop | ⏳ | Scaffold + `XAI_API_KEY` only |
+| Grok tool-calling loop | ✅ | OpenAI-compatible loop; tools for quotes + quant; mentor fallback without key |
 
 ---
 
@@ -132,7 +132,9 @@ Interactive docs when the API is running: http://127.0.0.1:8000/docs
 
 | Variable | Where | Purpose |
 |----------|--------|---------|
-| `XAI_API_KEY` | `backend/.env` | Grok client scaffold (tool loop not wired yet) |
+| `XAI_API_KEY` | `backend/.env` | Enables Grok tool-calling loop on `POST /v1/chat` |
+| `XAI_MODEL` | `backend/.env` | Optional model override (default `grok-3`) |
+| `XAI_BASE_URL` | `backend/.env` | Optional API base (default `https://api.x.ai/v1`) |
 | `EXPO_PUBLIC_AETHERON_API_URL` | mobile runtime | API base (default `http://127.0.0.1:8000`) |
 
 Copy `backend/.env.example` → `backend/.env`. Never commit secrets.
@@ -185,6 +187,7 @@ Full checklist: [`docs/STYLE_GUIDE.md`](docs/STYLE_GUIDE.md)
 | [`docs/LIVE_DATA.md`](docs/LIVE_DATA.md) | CoinGecko / Yahoo adapters, refresh policy |
 | [`docs/STYLE_GUIDE.md`](docs/STYLE_GUIDE.md) | Buttons, glass, mockup alignment |
 | [`docs/ORIGO_INTEGRATION.md`](docs/ORIGO_INTEGRATION.md) | Embedding Aetheron inside ORIGO |
+| [`docs/GROK_TOOLS.md`](docs/GROK_TOOLS.md) | Grok tool-calling loop + tool catalog |
 | [`backend/README.md`](backend/README.md) | API run one-liner |
 
 ---
@@ -193,17 +196,17 @@ Full checklist: [`docs/STYLE_GUIDE.md`](docs/STYLE_GUIDE.md)
 
 - **Mobile:** Expo ~57, React Native, React Navigation, react-native-svg, Expo fonts (Cinzel · Cormorant · DM Sans)
 - **Backend:** FastAPI, Pydantic, NumPy / SciPy / Pandas, httpx, uvicorn
-- **LLM (planned):** xAI Grok via `XAI_API_KEY` stub in `backend/app/services/grok_client.py`
+- **LLM:** xAI Grok tool loop (`backend/app/services/grok_client.py` + `tools.py`) when `XAI_API_KEY` is set
 - **Market data:** CoinGecko + Yahoo Finance adapters (`backend/app/services/market_data.py`)
 
 ---
 
 ## Next priorities
 
-1. Real LLM tool-calling loop (Grok) — prices and quant only via tools  
-2. Paid equity / sentiment feeds for production marks  
-3. Supabase persistence for quotes & mentor events  
-4. ORIGO shell mount (shared JWT, watchlists, portfolio context)
+1. Paid equity / sentiment feeds for production marks (Fear & Greed, broader equities)  
+2. Supabase persistence for quotes & mentor events  
+3. ORIGO shell mount (shared JWT, watchlists, portfolio context)  
+4. Streaming SSE from Grok tool loop into Chat UI
 
 ---
 

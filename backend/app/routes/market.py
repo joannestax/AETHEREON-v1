@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query
 
-from app.services.market_data import build_watchlist, fetch_equity_quote, fetch_global_overview
+from app.services.market_data import build_watchlist, fetch_global_overview
 
 router = APIRouter()
 

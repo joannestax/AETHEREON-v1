@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   stage: {
     flex: 1,
-    backgroundColor: '#02030A',
+    backgroundColor: colors.space.void,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 24,
@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     maxHeight: '92%',
     borderRadius: 36,
     borderWidth: 2,
-    borderColor: 'rgba(212,175,55,0.45)',
+    borderColor: colors.gold.muted,
     backgroundColor: colors.space.void,
     overflow: 'hidden',
   },
@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 22,
     borderRadius: 12,
-    backgroundColor: '#000',
+    backgroundColor: colors.space.deep,
     zIndex: 10,
   },
   screen: {

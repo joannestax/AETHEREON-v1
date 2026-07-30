@@ -4,7 +4,13 @@ type ChatApiResponse = {
   reply: string;
   signature?: Record<string, unknown> | null;
   note?: string;
+  source?: string;
+  tools_used?: Array<Record<string, unknown>>;
+  model?: string | null;
 };
+
+/** LLM + tool loop can take longer than the offline mentor path. */
+const CHAT_TIMEOUT_MS = 55_000;
 
 /**
  * Streams a reply character-by-character for cinematic mentor presence.
@@ -19,13 +25,14 @@ export async function streamChatReply(
 
   try {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 2500);
+    const timer = setTimeout(() => controller.abort(), CHAT_TIMEOUT_MS);
     const res = await fetch(`${API_BASE}/v1/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         messages: [{ role: 'user', content: userText }],
         include_signature: false,
+        use_tools: true,
       }),
       signal: controller.signal,
     });
@@ -52,6 +59,7 @@ export async function requestChat(userText: string, ticker?: string) {
     messages: [{ role: 'user', content: userText }],
     ticker,
     include_signature: Boolean(ticker),
+    use_tools: true,
   });
 }
 

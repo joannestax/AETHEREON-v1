@@ -48,23 +48,25 @@ export function WatchlistCard({ items, onPressTicker, live }: Props) {
               <Text style={styles.price}>
                 {hasPrice
                   ? `$${item.price!.toLocaleString(undefined, {
-                      maximumFractionDigits: item.price! >= 1000 ? 2 : 2,
+                      maximumFractionDigits: 2,
                     })}`
                   : '—'}
               </Text>
               <Text
                 style={[
                   styles.change,
-                  hasPrice
+                  hasPrice && item.changePercent != null
                     ? { color: up ? colors.gold.bright : colors.cyan.primary }
                     : null,
                 ]}
               >
                 {hasPrice && item.changePercent != null
                   ? `${item.changePercent >= 0 ? '+' : ''}${item.changePercent.toFixed(2)}%`
-                  : item.status === 'unlisted'
-                    ? 'Unlisted'
-                    : 'No feed'}
+                  : hasPrice
+                    ? '—'
+                    : item.status === 'unlisted'
+                      ? 'Unlisted'
+                      : 'No feed'}
               </Text>
             </View>
           </Pressable>
