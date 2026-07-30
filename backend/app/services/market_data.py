@@ -211,7 +211,12 @@ def build_watchlist(tickers: list[str] | None = None) -> dict:
 
         if t in COINGECKO_IDS:
             q = crypto.get(t, {})
-            spark = fetch_crypto_sparkline(t) if q else []
+            spark: list[float] = []
+            if q:
+                try:
+                    spark = fetch_crypto_sparkline(t)
+                except Exception:  # noqa: BLE001
+                    spark = []
             items.append(
                 {
                     "ticker": t,
