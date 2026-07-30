@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
   useWindowDimensions,
 } from 'react-native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AETHERON } from '../constants/aetheron';
+import { DEMO_SIGNATURE_ANALYSIS } from '../data/demoSignatureAnalysis';
 import { colors, spacing, typography } from '../theme/tokens';
 import type { SignatureAnalysis } from '../types/signatureAnalysis';
 import { AetheronOrb } from '../components/avatar/AetheronOrb';
@@ -18,12 +21,27 @@ import { SwingTradeSection } from '../components/analysis/SwingTradeSection';
 import { TechnicalSection } from '../components/analysis/TechnicalSection';
 import { CosmicBackground } from '../components/ui/CosmicBackground';
 import { SignalBadge } from '../components/ui/SignalBadge';
+import type { RootStackParamList } from '../navigation/types';
 
-type Props = {
-  analysis: SignatureAnalysis;
+type NavProps = NativeStackScreenProps<RootStackParamList, 'SignatureAnalysis'>;
+
+type Props = Partial<NavProps> & {
+  analysis?: SignatureAnalysis;
 };
 
-export function SignatureAnalysisScreen({ analysis }: Props) {
+export function SignatureAnalysisScreen({ analysis: analysisProp, route, navigation }: Props) {
+  const analysis = useMemo(() => {
+    const base = analysisProp ?? DEMO_SIGNATURE_ANALYSIS;
+    const ticker = route?.params?.ticker;
+    if (!ticker) return base;
+    return {
+      ...base,
+      ticker: ticker.toUpperCase(),
+      companyName: `${ticker.toUpperCase()} — resolve via live data`,
+      isIllustrative: true,
+    };
+  }, [analysisProp, route?.params?.ticker]);
+
   const { width } = useWindowDimensions();
   const changePositive = analysis.change >= 0;
 
@@ -34,8 +52,18 @@ export function SignatureAnalysisScreen({ analysis }: Props) {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.brandRow}>
-          <Text style={styles.brandMark}>ORIGO NEXUS</Text>
-          <Text style={styles.brandSub}>AI MENTOR · SIGNATURE ANALYSIS</Text>
+          {navigation ? (
+            <Pressable onPress={() => navigation.goBack()} style={styles.backBtn}>
+              <Text style={styles.backText}>← BACK</Text>
+            </Pressable>
+          ) : (
+            <View style={styles.backBtn} />
+          )}
+          <View style={{ alignItems: 'center' }}>
+            <Text style={styles.brandMark}>ORIGO NEXUS</Text>
+            <Text style={styles.brandSub}>AI MENTOR · SIGNATURE ANALYSIS</Text>
+          </View>
+          <View style={styles.backBtn} />
         </View>
 
         <View style={styles.avatarBlock}>
@@ -104,19 +132,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
   },
   brandRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: spacing.lg,
+  },
+  backBtn: {
+    width: 64,
+  },
+  backText: {
+    ...typography.uiMedium,
+    color: colors.cyan.primary,
+    fontSize: 11,
+    letterSpacing: 1,
   },
   brandMark: {
     ...typography.brand,
     color: colors.gold.primary,
-    fontSize: 18,
+    fontSize: 16,
   },
   brandSub: {
     ...typography.uiMedium,
     color: colors.cyan.primary,
-    fontSize: 10,
-    letterSpacing: 2,
+    fontSize: 9,
+    letterSpacing: 1.4,
     marginTop: 4,
   },
   avatarBlock: {

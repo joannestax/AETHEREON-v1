@@ -11,6 +11,7 @@ export const AETHERON = {
   project: 'Project Genesis',
   product: 'ORIGO NEXUS',
   tagline: 'Always Watching the Markets',
+  taglineAlt: 'The light between the stars and the markets.',
   voice:
     'Calm cosmic authority. Precise. High-signal. Mythic only when it increases clarity.',
 } as const;
