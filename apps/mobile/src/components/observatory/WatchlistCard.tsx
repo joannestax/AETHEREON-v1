@@ -48,7 +48,7 @@ export function WatchlistCard({ items, onPressTicker, live }: Props) {
               <Text style={styles.price}>
                 {hasPrice
                   ? `$${item.price!.toLocaleString(undefined, {
-                      maximumFractionDigits: item.price! >= 1000 ? 2 : 2,
+                      maximumFractionDigits: 2,
                     })}`
                   : '—'}
               </Text>
