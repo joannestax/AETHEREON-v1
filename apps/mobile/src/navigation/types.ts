@@ -1,8 +1,4 @@
-export type RootStackParamList = {
-  MainTabs: undefined;
-  SignatureAnalysis: { ticker?: string } | undefined;
-  QuotesCommandCenter: undefined;
-};
+import type { NavigatorScreenParams } from '@react-navigation/native';
 
 export type MainTabParamList = {
   Observatory: undefined;
@@ -10,4 +6,10 @@ export type MainTabParamList = {
   Watchlists: undefined;
   Insights: undefined;
   Profile: undefined;
+};
+
+export type RootStackParamList = {
+  MainTabs: NavigatorScreenParams<MainTabParamList> | undefined;
+  SignatureAnalysis: { ticker?: string } | undefined;
+  QuotesCommandCenter: undefined;
 };

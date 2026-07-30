@@ -6,7 +6,7 @@ Project Genesis / ORIGO NEXUS AI Mentor layer
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routes import chat, quant, quotes
+from app.routes import chat, quant, quotes, market
 
 app = FastAPI(
     title="Aetheron API",
@@ -25,6 +25,7 @@ app.add_middleware(
 app.include_router(chat.router, prefix="/v1", tags=["chat"])
 app.include_router(quant.router, prefix="/v1", tags=["quant"])
 app.include_router(quotes.router, prefix="/v1", tags=["quotes"])
+app.include_router(market.router, prefix="/v1", tags=["market"])
 
 
 @app.get("/health")

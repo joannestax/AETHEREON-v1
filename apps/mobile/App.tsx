@@ -10,6 +10,7 @@ import {
   DMSans_700Bold,
 } from '@expo-google-fonts/dm-sans';
 import { RootNavigator } from './src/navigation/RootNavigator';
+import { WebPhoneShell } from './src/components/ui/WebPhoneShell';
 import { colors, typography } from './src/theme/tokens';
 
 export default function App() {
@@ -33,7 +34,9 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <RootNavigator />
+      <WebPhoneShell>
+        <RootNavigator />
+      </WebPhoneShell>
       <StatusBar style="light" />
     </SafeAreaProvider>
   );
