@@ -273,7 +273,6 @@ export function BearfallRunScreen() {
 function IntroPanel({ onLaunch }: { onLaunch: () => void }) {
   return (
     <View style={styles.intro}>
-      <Text style={styles.kicker}>{BEARFALL_META.questType.toUpperCase()}</Text>
       <Text style={styles.heroTitle}>{BEARFALL_META.title}</Text>
       <Text style={styles.heroSub}>{BEARFALL_META.subtitle}</Text>
       <Text style={styles.metaLine}>

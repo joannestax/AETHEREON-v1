@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   radar: {
-    height: 220,
+    height: 168,
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.cyan.border,

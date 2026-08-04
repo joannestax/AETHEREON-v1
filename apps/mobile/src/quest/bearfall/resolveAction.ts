@@ -583,7 +583,7 @@ export function computeDisciplineScore(report: Omit<BattleReport, 'disciplineSco
 }
 
 export function timeoutPenalty(encounter: Encounter, shieldActive: boolean) {
-  const raw = encounter.damage;
+  const raw = Math.round(encounter.damage * 0.65);
   const damage = shieldActive ? Math.round(raw * 0.35) : raw;
   return {
     damage,
