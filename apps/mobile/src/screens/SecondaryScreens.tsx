@@ -25,7 +25,9 @@ export function InsightsScreen() {
   return (
     <PlaceholderScreen
       title="Insights"
-      subtitle="Signature reports and daily transmissions."
+      subtitle="Signature reports, daily transmissions, and Champion Assist missions."
+      actionLabel="LAUNCH BEARFALL RUN"
+      onAction={(nav) => nav.navigate('BearfallRun')}
     />
   );
 }

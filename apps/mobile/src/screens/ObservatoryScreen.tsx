@@ -100,6 +100,12 @@ export function ObservatoryScreen() {
             compact
             onPress={() => navigation.navigate('SignatureAnalysis', { ticker: 'NVDA' })}
           />
+          <CosmicButton
+            label="BEARFALL RUN"
+            variant="ghost"
+            compact
+            onPress={() => navigation.navigate('BearfallRun')}
+          />
         </View>
 
         {data.quoteOfTheDay ? (

@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { colors } from '../theme/tokens';
 import { SignatureAnalysisScreen } from '../screens/SignatureAnalysisScreen';
 import { QuotesCommandCenterScreen } from '../screens/QuotesCommandCenterScreen';
+import { BearfallRunScreen } from '../screens/BearfallRunScreen';
 import { MainTabs } from './MainTabs';
 import type { RootStackParamList } from './types';
 
@@ -28,6 +29,7 @@ export function RootNavigator() {
         <Stack.Screen name="MainTabs" component={MainTabs} />
         <Stack.Screen name="SignatureAnalysis" component={SignatureAnalysisScreen} />
         <Stack.Screen name="QuotesCommandCenter" component={QuotesCommandCenterScreen} />
+        <Stack.Screen name="BearfallRun" component={BearfallRunScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -12,6 +12,7 @@ Aetheron is an **embedded intelligent co-pilot** inside the ORIGO App (Project G
 - `origo://aetheron/chat`
 - `origo://aetheron/analyze/{TICKER}` → Signature Analysis
 - `origo://aetheron/quotes` → Daily Quotes / Command Center
+- `origo://aetheron/quests/bearfall` → Bearfall Run mini-quest
 - In-app CTA on any ticker row: **Ask Aetheron**
 
 ## Module boundaries

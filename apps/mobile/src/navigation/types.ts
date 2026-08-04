@@ -12,4 +12,5 @@ export type RootStackParamList = {
   MainTabs: NavigatorScreenParams<MainTabParamList> | undefined;
   SignatureAnalysis: { ticker?: string } | undefined;
   QuotesCommandCenter: undefined;
+  BearfallRun: undefined;
 };
