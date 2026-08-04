@@ -136,9 +136,7 @@ export function BearfallRunScreen() {
             <ShipRadar
               activeZone={displayedZone}
               revealed={
-                state.patienceActive ||
-                currentEncounter?.bearType !== 'fakeout' ||
-                !currentEncounter?.decoyZone
+                state.patienceActive || !currentEncounter?.decoyZone
               }
               shaking={state.shaking}
             />

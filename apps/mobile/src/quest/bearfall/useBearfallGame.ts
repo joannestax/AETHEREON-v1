@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   buildBossEncounters,
   buildRaiderEncounters,
+  VICTORY_THRESHOLDS,
 } from '../../data/bearfallQuest';
 import type {
   AbilityId,
@@ -208,6 +209,24 @@ export function useBearfallGame() {
             auraGemsCollected: gems,
             longestAuraStreak: Math.max(prev.longestStreak, prev.streak),
           });
+          if (gems < VICTORY_THRESHOLDS.gems) {
+            return {
+              ...prev,
+              phase: 'defeat',
+              bearsDefeated,
+              gems,
+              patienceActive: false,
+              shieldActive: false,
+              bossCombo: [],
+              timerMs: 0,
+              report,
+              feedback: {
+                tone: 'danger',
+                title: 'Key Incomplete',
+                detail: `The vault needs ${VICTORY_THRESHOLDS.gems} Aura Gems. Only ${gems} collected — the chest stays sealed.`,
+              },
+            };
+          }
           return {
             ...prev,
             phase: 'treasure',
@@ -401,7 +420,8 @@ export function useBearfallGame() {
           return goDefeat({ ...prev, shields: 0, report, streak: 0 }, report);
         }
 
-        if (encounter.bossPhase === 3) {
+        // Boss phases must be resolved with abilities — timeouts punish but never skip.
+        if (prev.phase === 'boss') {
           return {
             ...prev,
             shields,
