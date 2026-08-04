@@ -46,6 +46,7 @@ Status chips (LIVE / ORBITAL SYNC): `<StatusChip label="LIVE FEEDS" tone="green"
 | Chat | `screens/ChatScreen.tsx` |
 | Signature Analysis | `screens/SignatureAnalysisScreen.tsx` |
 | Quotes Command Center | `screens/QuotesCommandCenterScreen.tsx` |
+| Bearfall Run quest | `screens/BearfallRunScreen.tsx` + `quest/bearfall/` |
 | Bottom tabs | `navigation/MainTabs.tsx` |
 
 ## 6. Match the attached mockups checklist

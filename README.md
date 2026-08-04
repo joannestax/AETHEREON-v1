@@ -107,6 +107,7 @@ scripts/deploy-web.sh        manual web export helper
 | Grok tool-calling loop | ✅ | OpenAI-compatible loop; tools for quotes + quant; mentor fallback without key |
 | Fear & Greed | ✅ | alternative.me live index on Observatory strip |
 | Signature live header | ✅ | Live mark when feed available; thesis levels stay tool-gated |
+| Bearfall Run mini-quest | ✅ | Champion Assist mission — radar combat, Titan Bear boss, Aethereon debrief |
 
 ---
 
@@ -114,9 +115,10 @@ scripts/deploy-web.sh        manual web export helper
 
 **Tabs:** Observatory · Chat · Watchlists · Insights · Profile  
 
-**Stack:** Signature Analysis · Quotes Command Center  
+**Stack:** Signature Analysis · Quotes Command Center · Bearfall Run  
 
 Point any ticker CTA at Signature Analysis; "Ask Aetheron" opens Chat with context.
+Launch **Bearfall Run** from Observatory or Insights for the Champion Assist mini-quest.
 
 ---
 
